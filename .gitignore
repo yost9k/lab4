@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# Results and archives
+results/
+*.tar.gz
+*.zip
+*.log
+
+# Binaries
+osv-scanner
+
+# Local Grafana files
+grafana/
+broken_dashboards/

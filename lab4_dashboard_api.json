@@ -1,0 +1,122 @@
+{
+  "dashboard": {
+    "uid": "lab4-vulnerability-monitoring",
+    "title": "Lab4 Vulnerability Monitoring",
+    "timezone": "browser",
+    "schemaVersion": 39,
+    "version": 4,
+    "refresh": "15s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Installed packages",
+        "gridPos": { "x": 0, "y": 0, "w": 8, "h": 5 },
+        "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+            "expr": "lab4_installed_packages_total",
+            "instant": true,
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "type": "timeseries",
+        "title": "Installed packages over time",
+        "gridPos": { "x": 8, "y": 0, "w": 16, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+            "expr": "lab4_installed_packages_total",
+            "legendFormat": "packages",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "type": "table",
+        "title": "Latest OS inventory",
+        "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+        "datasource": { "type": "postgres", "uid": "lab4_postgres" },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "lab4_postgres" },
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT a.hostname AS \"Hostname\", a.os_name AS \"OS\", a.os_version AS \"Version\", a.os_arch AS \"Arch\", a.version_id AS \"Version ID\", i.scan_time AS \"Scan time\", i.package_count AS \"Packages\" FROM assets a JOIN inventory_scans i ON a.asset_id = i.asset_id ORDER BY i.scan_time DESC LIMIT 1;",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "type": "table",
+        "title": "Recent inventory scans",
+        "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+        "datasource": { "type": "postgres", "uid": "lab4_postgres" },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "lab4_postgres" },
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT id AS \"Scan ID\", asset_id AS \"Asset ID\", scan_time AS \"Scan time\", package_count AS \"Packages\" FROM inventory_scans ORDER BY scan_time DESC LIMIT 10;",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "type": "stat",
+        "title": "Total vulnerabilities",
+        "gridPos": { "x": 0, "y": 24, "w": 8, "h": 5 },
+        "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+            "expr": "lab4_vulnerabilities_total",
+            "instant": true,
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "type": "bargauge",
+        "title": "Vulnerabilities by severity",
+        "gridPos": { "x": 8, "y": 24, "w": 16, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+        "targets": [
+          {
+            "datasource": { "type": "prometheus", "uid": "lab4_prometheus" },
+            "expr": "lab4_vulnerabilities_by_severity",
+            "legendFormat": "{{severity}}",
+            "instant": true,
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "type": "table",
+        "title": "Recent vulnerability scans",
+        "gridPos": { "x": 0, "y": 32, "w": 24, "h": 8 },
+        "datasource": { "type": "postgres", "uid": "lab4_postgres" },
+        "targets": [
+          {
+            "datasource": { "type": "postgres", "uid": "lab4_postgres" },
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT id AS \"Scan ID\", scan_time AS \"Scan time\", vulnerabilities_count AS \"Total\", critical_count AS \"Critical\", high_count AS \"High\", medium_count AS \"Medium\", low_count AS \"Low\", unknown_count AS \"Unknown\" FROM vulnerability_scans ORDER BY scan_time DESC LIMIT 10;",
+            "refId": "A"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}

@@ -1,0 +1,72 @@
+global:
+  scrape_timeout: 10s
+
+target:
+  data_source_name: 'postgresql://lab4:lab4@postgres:5432/lab4?sslmode=disable'
+  collectors:
+    - lab4_collector
+
+collectors:
+  - collector_name: lab4_collector
+    metrics:
+      - metric_name: lab4_latest_inventory_timestamp_seconds
+        type: gauge
+        help: 'Last inventory scan timestamp'
+        values: [timestamp_seconds]
+        query: |
+          SELECT COALESCE(EXTRACT(EPOCH FROM MAX(scan_time)), 0)::float AS timestamp_seconds
+          FROM inventory_scans;
+
+      - metric_name: lab4_installed_packages_total
+        type: gauge
+        help: 'Installed packages count in latest inventory scan'
+        values: [package_count]
+        query: |
+          SELECT COALESCE((
+            SELECT package_count
+            FROM inventory_scans
+            ORDER BY scan_time DESC
+            LIMIT 1
+          ), 0)::float AS package_count;
+
+      - metric_name: lab4_latest_vulnerability_timestamp_seconds
+        type: gauge
+        help: 'Last vulnerability scan timestamp'
+        values: [timestamp_seconds]
+        query: |
+          SELECT COALESCE(EXTRACT(EPOCH FROM MAX(scan_time)), 0)::float AS timestamp_seconds
+          FROM vulnerability_scans;
+
+      - metric_name: lab4_vulnerabilities_total
+        type: gauge
+        help: 'Total vulnerabilities in latest vulnerability scan'
+        values: [vulnerability_count]
+        query: |
+          SELECT COALESCE((
+            SELECT vulnerabilities_count
+            FROM vulnerability_scans
+            ORDER BY scan_time DESC
+            LIMIT 1
+          ), 0)::float AS vulnerability_count;
+
+      - metric_name: lab4_vulnerabilities_by_severity
+        type: gauge
+        help: 'Vulnerabilities by severity in latest scan'
+        key_labels: [severity]
+        values: [vulnerability_count]
+        query: |
+          WITH latest AS (
+            SELECT *
+            FROM vulnerability_scans
+            ORDER BY scan_time DESC
+            LIMIT 1
+          )
+          SELECT 'critical' AS severity, COALESCE(critical_count, 0)::float AS vulnerability_count FROM latest
+          UNION ALL
+          SELECT 'high' AS severity, COALESCE(high_count, 0)::float AS vulnerability_count FROM latest
+          UNION ALL
+          SELECT 'medium' AS severity, COALESCE(medium_count, 0)::float AS vulnerability_count FROM latest
+          UNION ALL
+          SELECT 'low' AS severity, COALESCE(low_count, 0)::float AS vulnerability_count FROM latest
+          UNION ALL
+          SELECT 'unknown' AS severity, COALESCE(unknown_count, 0)::float AS vulnerability_count FROM latest;
